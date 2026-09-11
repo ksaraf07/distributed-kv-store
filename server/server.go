@@ -45,6 +45,10 @@ func (srv *Server) handleConn(conn net.Conn) {
 		response := srv.handleCommand(line)
 		fmt.Fprintln(conn, response)
 	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("connection error:", err)
+	}
 }
 
 func (srv *Server) handleCommand(line string) string {
