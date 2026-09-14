@@ -9,7 +9,12 @@ import (
 )
 
 func main() {
-	s := store.New()
+	s, err := store.New("kv.log")
+	if err != nil {
+		fmt.Println("failed to open store:", err)
+		os.Exit(1)
+	}
+
 	srv := server.New(s)
 
 	addr := ":9000"
