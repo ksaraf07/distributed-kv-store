@@ -10,11 +10,26 @@ import (
 )
 
 type Server struct {
-	store *store.Store
+	store     *store.Store
+	followers []net.Conn
 }
 
-func New(s *store.Store) *Server {
-	return &Server{store: s}
+// New creates a Server backed by s, and dials every address in
+// followerAddrs up front, keeping each connection open for replication.
+func New(s *store.Store, followerAddrs []string) *Server {
+	srv := &Server{store: s}
+
+	for _, addr := range followerAddrs {
+		conn, err := net.Dial("tcp", addr)
+		if err != nil {
+			fmt.Println("could not connect to follower", addr, ":", err)
+			continue
+		}
+		fmt.Println("connected to follower:", addr)
+		srv.followers = append(srv.followers, conn)
+	}
+
+	return srv
 }
 
 func (srv *Server) ListenAndServe(addr string) error {
@@ -51,6 +66,13 @@ func (srv *Server) handleConn(conn net.Conn) {
 	}
 }
 
+// replicate forwards a command line to every connected follower.
+func (srv *Server) replicate(command string) {
+	for _, conn := range srv.followers {
+		fmt.Fprintln(conn, command)
+	}
+}
+
 func (srv *Server) handleCommand(line string) string {
 	parts := strings.Fields(line)
 	if len(parts) == 0 {
@@ -62,7 +84,10 @@ func (srv *Server) handleCommand(line string) string {
 		if len(parts) != 3 {
 			return "ERR usage: SET key value"
 		}
-		srv.store.Set(parts[1], parts[2])
+		if err := srv.store.Set(parts[1], parts[2]); err != nil {
+			return "ERR " + err.Error()
+		}
+		srv.replicate(line)
 		return "OK"
 
 	case "GET":
@@ -79,7 +104,10 @@ func (srv *Server) handleCommand(line string) string {
 		if len(parts) != 2 {
 			return "ERR usage: DEL key"
 		}
-		srv.store.Delete(parts[1])
+		if err := srv.store.Delete(parts[1]); err != nil {
+			return "ERR " + err.Error()
+		}
+		srv.replicate(line)
 		return "OK"
 
 	default:

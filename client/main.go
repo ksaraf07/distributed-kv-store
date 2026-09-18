@@ -2,13 +2,17 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net"
 	"os"
 )
 
 func main() {
-	conn, err := net.Dial("tcp", "localhost:9000")
+	addr := flag.String("addr", "localhost:9000", "address of the kv-store node to connect to")
+	flag.Parse()
+
+	conn, err := net.Dial("tcp", *addr)
 	if err != nil {
 		fmt.Println("could not connect:", err)
 		os.Exit(1)
