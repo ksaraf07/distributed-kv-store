@@ -32,14 +32,15 @@ and etcd: networking, persistence, replication, and fault tolerance.
 
 ## Benchmark Results
 
-Tested with 20 concurrent clients, 100 requests each (2,000 total), on a single machine.
+Tested with 20 concurrent clients, 100 requests each (2,000 total), on a
+single machine. Each configuration run 3 times; values below are averages.
 
-| Configuration | Throughput | Total time |
+| Configuration | Avg. Throughput | Individual runs |
 |---|---|---|
-| No replication | ~64,450 req/sec | 31.0ms |
-| 1 follower (replicated) | ~40,900 req/sec | 48.9ms |
+| No replication | ~52,400 req/sec | 54,260 / 52,712 / 50,241 |
+| 1 follower (replicated) | ~38,570 req/sec | 37,069 / 39,750 / 38,892 |
 
-Replication introduces roughly 37% throughput overhead — the cost of the
+Replication introduces roughly 26% throughput overhead — the cost of the
 leader synchronously forwarding each write to its follower before
 returning a response, in exchange for data redundancy.
 
