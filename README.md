@@ -14,8 +14,8 @@ and etcd: networking, persistence, replication, and fault tolerance.
 - [x] Stage 1.4 — CLI client
 - [x] Stage 2 — persistence (write-ahead log)
 - [x] Stage 3 — replication
+
 - [x] Stage 4 — leader election (stretch)
-- [ ] Stage 5 — evaluation / load testing
 
 ## Known limitations
 
@@ -26,6 +26,22 @@ and etcd: networking, persistence, replication, and fault tolerance.
   promotes itself" — no voting/quorum logic yet.
 - Clients aren't automatically redirected to a newly promoted leader;
   they'd need to know to reconnect to the new address.
+
+
+- [x] Stage 5 — evaluation / load testing
+
+## Benchmark Results
+
+Tested with 20 concurrent clients, 100 requests each (2,000 total), on a single machine.
+
+| Configuration | Throughput | Total time |
+|---|---|---|
+| No replication | ~64,450 req/sec | 31.0ms |
+| 1 follower (replicated) | ~40,900 req/sec | 48.9ms |
+
+Replication introduces roughly 37% throughput overhead — the cost of the
+leader synchronously forwarding each write to its follower before
+returning a response, in exchange for data redundancy.
 
 ## Why Go
 
